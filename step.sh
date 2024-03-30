@@ -119,6 +119,11 @@ echo_details "* upgrade_firebase_tools: $upgrade_firebase_tools"
 
 echo
 
+# Export Service Credentials File
+if [ -n "${service_credentials_file}" ] ; then
+    export GOOGLE_APPLICATION_CREDENTIALS="${service_credentials_file}"
+fi
+
 if [ -z "${app_path}" ] ; then
     echo_fail "App path for APK, AAB or IPA is not defined"
 fi
@@ -161,6 +166,7 @@ if [ -z "${firebase_token}" ] ; then
           echo_info "Service Credentials File is a remote url, downloading it ..."
           curl $service_credentials_file --output credentials.json
           service_credentials_file=$(pwd)/credentials.json
+          export GOOGLE_APPLICATION_CREDENTIALS="${service_credentials_file}"
           echo_info "Downloaded Service Credentials File to path: ${service_credentials_file}"
         else
           echo_fail "Service Credentials File defined but does not exist at path: ${service_credentials_file}"
@@ -194,11 +200,6 @@ if [ "${upgrade_firebase_tools}" = true ] ; then
     curl -sL firebase.tools | upgrade=true bash
 else
     curl -sL firebase.tools | bash
-fi
-
-# Export Service Credentials File
-if [ -n "${service_credentials_file}" ] ; then
-    export GOOGLE_APPLICATION_CREDENTIALS="${service_credentials_file}"
 fi
 
 # Deploy
@@ -239,17 +240,23 @@ fi
 echo_details "$submit_cmd"
 echo
 
-eval "${submit_cmd}"
+retries_max=3 # TODO: this better come from a step parameter
 
-if [ $? -ne 0 ] ; then
-    echo_details "Failed, try #2...
-    eval "${submit_cmd}"
-fi
-
-if [ $? -ne 0 ] ; then
-    echo_details "Failed, try #3...
-    eval "${submit_cmd}"
-fi
+retry_count=0
+while true; do
+    if eval "${submit_cmd}"; then
+        echo_details "Submission successful."
+        break
+    else
+        ((retry_count++))
+        echo_details "Submission failed, retry #${retry_count}..."
+        if [ "${retry_count}" -eq "${retries_max}" ]; then
+            echo_details "Max retries reached. Exiting."
+            exit 1
+        fi
+        sleep 3
+    fi
+done
 
 if [ $? -eq 0 ] ; then
     echo_done "Success"
