@@ -258,6 +258,16 @@ while true; do
     fi
 done
 
+if [ $? -ne 0 ] ; then
+    echo_details "Failed, try #2...
+    eval "${submit_cmd}"
+fi
+
+if [ $? -ne 0 ] ; then
+    echo_details "Failed, try #3...
+    eval "${submit_cmd}"
+fi
+
 if [ $? -eq 0 ] ; then
     echo_done "Success"
 else
