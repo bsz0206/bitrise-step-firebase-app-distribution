@@ -97,6 +97,20 @@ function truncate_release_notes {
     fi
 }
 
+function extract_release_id {
+    local output="$1"
+    local release_id
+
+    release_id=$(echo "$output" | grep -Eo '/releases/[a-zA-Z0-9]+' | head -n1 | awk -F'/' '{print $3}')
+
+    if [ -z "$release_id" ]; then
+        echo_warn "Release ID not found in the output."
+    else
+        echo_info "Release ID: $release_id"
+        envman add --key FIREBASE_APP_DISTRIBUTION_RELEASE_ID --value "$release_id"
+    fi
+}
+
 #=======================================
 # Main
 #=======================================
@@ -199,7 +213,11 @@ fi
 if [ "${upgrade_firebase_tools}" = true ] ; then
     curl -sL firebase.tools | upgrade=true bash
 else
-    curl -sL firebase.tools | bash
+    if command -v firebase >/dev/null 2>&1 ; then
+        echo_info "Firebase CLI is already installed. Skipping installation."
+    else
+        curl -sL firebase.tools | bash
+    fi
 fi
 
 # Deploy
@@ -238,13 +256,14 @@ if [ "${is_debug}" = true ] ; then
 fi
 
 echo_details "$submit_cmd"
-echo
 
+# Execute the command and capture the output
 retries_max=3 # TODO: this better come from a step parameter
 
 retry_count=0
 while true; do
-    if eval "${submit_cmd}"; then
+    output=$(eval "${submit_cmd}" 2>&1)
+    if output; then
         echo_details "Submission successful."
         break
     else
@@ -257,6 +276,21 @@ while true; do
         sleep 3
     fi
 done
+
+# Adjust the number of `sed -n 2p` if the position of the URL changes in the output
+FIREBASE_BITRISE_CONSOLE_URL=$(echo $output | grep -Eo "(http|https)://[a-zA-Z0-9./?=-_%:-]*" | sed -n 2p)
+echo_info "firebase console url: ${FIREBASE_BITRISE_CONSOLE_URL}"
+envman add --key FIREBASE_BITRISE_CONSOLE_URL --value "${FIREBASE_BITRISE_CONSOLE_URL}"
+
+FIREBASE_BITRISE_APP_DISTRIBUTION_URL=$(echo $output | grep -Eo "(http|https)://[a-zA-Z0-9./?=_%:-]*" | sed -n 3p)
+echo_info "firebase app distribution url: ${FIREBASE_BITRISE_APP_DISTRIBUTION_URL}"
+envman add --key FIREBASE_BITRISE_APP_DISTRIBUTION_URL --value "${FIREBASE_BITRISE_APP_DISTRIBUTION_URL}"
+
+echo "$output"
+
+# Set output variables
+extract_release_id "$output"
+echo
 
 if [ $? -eq 0 ] ; then
     echo_done "Success"
