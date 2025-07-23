@@ -211,7 +211,6 @@ if [ ! -z "${release_notes_file}" ] && [ ! -f "${release_notes_file}" ] ; then
 fi
 
 # Install Firebase CLI
-which firebase
 platform="macos"
 if [ "${upgrade_firebase_tools}" = true ]; then
     firebase_install_pipe="upgrade=true"
@@ -223,9 +222,10 @@ if [ -n "${firebase_tools_version}" ]; then
     firebase_binary_url="https://firebase.tools/bin/${platform}/${firebase_tools_version}"
     echo_info "Downloading from: ${firebase_binary_url}"
 
+    mkdir "_tmp_$$"
+    cd    "_tmp_$$"
     if curl --head --silent --fail "${firebase_binary_url}" > /dev/null; then
         curl -Lo firebase_bin "${firebase_binary_url}"
-        ls -l
         sudo mv firebase_bin /usr/local/bin/firebase
         chmod +x /usr/local/bin/firebase
         firebase --version
@@ -233,6 +233,8 @@ if [ -n "${firebase_tools_version}" ]; then
         echo_error "Firebase CLI version ${firebase_tools_version} not found at ${firebase_binary_url}"
         exit 1
     fi
+    cd ..
+    rm -fr "_tmp_$$"
 
 else
     echo_info "Installing Firebase CLI from default installer"
@@ -290,7 +292,7 @@ retries_max=3 # TODO: this better come from a step parameter
 retry_count=0
 while true; do
     output=$(eval "${submit_cmd}" 2>&1)
-    if output; then
+    if ${output}; then
         echo_details "Submission successful."
         break
     else
