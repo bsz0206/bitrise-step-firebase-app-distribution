@@ -127,11 +127,11 @@ inputs:
       value_options:
         - "false"
         - "true"
-  - firebase_tools_url:
+  - firebase_tools_version:
     opts:
-      title: Download URL for Firebase Tools
+      title: Firebase Tools Version
       description: |
-        The download URL for the Firebase CLI tools.
+        The version of the Firebase CLI tools to install.
       is_required: false
   - is_debug: "false"
     opts:

@@ -210,20 +210,38 @@ if [ ! -z "${release_notes_file}" ] && [ ! -f "${release_notes_file}" ] ; then
     echo_warn "Path for Release Notes specified, but file does not exist at path: ${release_notes_file}"
 fi
 
-# Install Firebase
-if [ "${upgrade_firebase_tools}" = true ] ; then
-    if [ -n "${firebase_tools_url}" ]; then
-        echo_info "Upgrading Firebase CLI from custom URL: ${firebase_tools_url}"
+# Install Firebase CLI
+platform="macos"
+if [ "${upgrade_firebase_tools}" = true ]; then
+    firebase_install_pipe="upgrade=true"
+fi
+
+if [ -n "${firebase_tools_version}" ]; then
+    echo_info "Installing Firebase CLI version ${firebase_tools_version} for ${platform}"
+
+    firebase_binary_url="https://firebase.tools/bin/${platform}/v${firebase_tools_version}"
+    echo_info "Downloading from: ${firebase_binary_url}"
+
+    if curl --head --silent --fail "${firebase_binary_url}" > /dev/null; then
+        curl -Lo firebase_bin "${firebase_binary_url}"
+        chmod +x firebase_bin
+        sudo mv firebase_bin /usr/local/bin/firebase
+        firebase --version
     else
-        echo_info "Upgrading Firebase CLI from default URL"
-        firebase_tools_url="firebase.tools"
+        echo_error "Firebase CLI version ${firebase_tools_version} not found at ${firebase_binary_url}"
+        exit 1
     fi
-    curl -sL "${firebase_tools_url}" | upgrade=true bash
+
 else
-    if command -v firebase >/dev/null 2>&1 ; then
+    echo_info "Installing Firebase CLI from default installer"
+
+    firebase_tools_url="https://firebase.tools"
+    firebase_install_pipe="bash"
+
+    if command -v firebase >/dev/null 2>&1; then
         echo_info "Firebase CLI is already installed. Skipping installation."
     else
-        curl -sL firebase.tools | bash
+        curl -sL "${firebase_tools_url}" | ${firebase_install_pipe} bash
     fi
 fi
 
