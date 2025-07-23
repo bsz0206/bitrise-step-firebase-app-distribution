@@ -220,7 +220,7 @@ fi
 if [ -n "${firebase_tools_version}" ]; then
     echo_info "Installing Firebase CLI version ${firebase_tools_version} for ${platform}"
 
-    firebase_binary_url="https://firebase.tools/bin/${platform}/v${firebase_tools_version}"
+    firebase_binary_url="https://firebase.tools/bin/${platform}/${firebase_tools_version}"
     echo_info "Downloading from: ${firebase_binary_url}"
 
     if curl --head --silent --fail "${firebase_binary_url}" > /dev/null; then
