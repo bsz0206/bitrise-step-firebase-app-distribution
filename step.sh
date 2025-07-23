@@ -292,7 +292,8 @@ retries_max=3 # TODO: this better come from a step parameter
 retry_count=0
 while true; do
     output=$(eval "${submit_cmd}" 2>&1)
-    if ${output}; then
+    status=$?
+    if [ $status -eq 0 ]; then
         echo_details "Submission successful."
         break
     else
