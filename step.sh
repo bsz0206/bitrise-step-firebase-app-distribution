@@ -212,7 +212,7 @@ fi
 
 # Install Firebase
 if [ "${upgrade_firebase_tools}" = true ] ; then
-    if ${firebase_tools_url}; then
+    if [ -n "${firebase_tools_url}" ]; then
         echo_info "Upgrading Firebase CLI from custom URL: ${firebase_tools_url}"
     else
         echo_info "Upgrading Firebase CLI from default URL"
