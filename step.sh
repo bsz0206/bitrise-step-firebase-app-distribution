@@ -130,7 +130,7 @@ echo_details "* groups: $groups"
 echo_details "* flags: $flags"
 echo_details "* is_debug: $is_debug"
 echo_details "* upgrade_firebase_tools: $upgrade_firebase_tools"
-echo_details "* firebase_tools_url: $firebase_tools_url"
+echo_details "* firebase_tools_version: $firebase_tools_version"
 
 echo
 
@@ -211,6 +211,7 @@ if [ ! -z "${release_notes_file}" ] && [ ! -f "${release_notes_file}" ] ; then
 fi
 
 # Install Firebase CLI
+which firebase
 platform="macos"
 if [ "${upgrade_firebase_tools}" = true ]; then
     firebase_install_pipe="upgrade=true"
@@ -224,8 +225,9 @@ if [ -n "${firebase_tools_version}" ]; then
 
     if curl --head --silent --fail "${firebase_binary_url}" > /dev/null; then
         curl -Lo firebase_bin "${firebase_binary_url}"
-        chmod +x firebase_bin
+        ls -l
         sudo mv firebase_bin /usr/local/bin/firebase
+        chmod +x /usr/local/bin/firebase
         firebase --version
     else
         echo_error "Firebase CLI version ${firebase_tools_version} not found at ${firebase_binary_url}"
