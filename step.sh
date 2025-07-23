@@ -130,6 +130,7 @@ echo_details "* groups: $groups"
 echo_details "* flags: $flags"
 echo_details "* is_debug: $is_debug"
 echo_details "* upgrade_firebase_tools: $upgrade_firebase_tools"
+echo_details "* firebase_tools_url: $firebase_tools_url"
 
 echo
 
@@ -211,7 +212,13 @@ fi
 
 # Install Firebase
 if [ "${upgrade_firebase_tools}" = true ] ; then
-    curl -sL firebase.tools | upgrade=true bash
+    if ${firebase_tools_url}; then
+        echo_info "Upgrading Firebase CLI from custom URL: ${firebase_tools_url}"
+    else
+        echo_info "Upgrading Firebase CLI from default URL"
+        firebase_tools_url="firebase.tools"
+    fi
+    curl -sL "${firebase_tools_url}" | upgrade=true bash
 else
     if command -v firebase >/dev/null 2>&1 ; then
         echo_info "Firebase CLI is already installed. Skipping installation."

@@ -127,6 +127,12 @@ inputs:
       value_options:
         - "false"
         - "true"
+  - firebase_tools_url:
+    opts:
+      title: Download URL for Firebase Tools
+      description: |
+        The download URL for the Firebase CLI tools.
+      is_required: false
   - is_debug: "false"
     opts:
       category: Debug
